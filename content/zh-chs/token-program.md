@@ -9,31 +9,31 @@ objectives:
 ---
 
 # TL;DR
-* SPL-Tokens代表Solana网络上所有非原生代币。Solana上的同质化和非同质化代币（NFT）都是SPL-Tokens。
-* Token Program 包含创建和与SPL-Tokens交互的指令。
-* Token Mints 是存储关于特定Token的数据的账户，但不持有代币。
-* Token Accounts 用于持有特定Token Mint的代币。
-* 创建Token Mints和Token Accounts 需要SOL来支付租金。当账户关闭时，Token Account的租金可以退还，但目前无法关闭Token Mints账户。
+* SPL-Tokens 代表 Solana 网络上所有非原生代币。Solana 上的同质化和非同质化代币（NFT）都是SPL-Tokens。
+* Token Program 包含创建和与 SPL-Tokens 交互的指令。
+* Token Mints 是存储关于特定 Token 的数据的账户，但不持有代币。
+* Token Accounts 用于持有特定 Token Mint 的代币。
+* 创建 Token Mints 和 oken Accounts 需要 SOL 来支付租金。当账户关闭时，Token Account 的租金可以退还，但目前无法关闭 Token Mints 账户。
 
 # 概览
-Token Program是Solana Program Library（SPL）提供的众多程序之一。它包含创建和与SPL-Tokens交互的指令。这些代币代表Solana网络上所有非原生（即非SOL）代币。
+Token Program 是 Solana Program Library（SPL）提供的众多程序之一。它包含创建和与 SPL-Tokens 交互的指令。这些代币代表 Solana 网络上所有非原生（即非SOL）代币。
 
-本课程将重点介绍使用Token Program创建和管理新SPL-Token的基础知识：
-1. 创建新的Token Mint
-2. 创建Token Accounts
-3. 铸造
-4. 将代币从一个持有者转移给另一个持有者
-5. 销毁代币
+本课程将重点介绍使用 Token Program 创建和管理新 SPL-Token 的基础知识：
+1. 创建 Token Mint
+2. 创建 Token Accounts
+3. 铸造 Mint
+4. 将代币从一个持有者转移给另一个持有者 Transfer
+5. 销毁代币 Burn
 
 我们将从开发过程的客户端角度来解决这个问题，使用`@solana/spl-token` JavaScript库。
 
 ## 铸币厂（Token Mint）
-要创建新的SPL-Token，首先必须创建一个Token Mint。Token Mint是存储特定代币数据的账户。
+要创建新的 SPL-Token，首先必须创建一个 Token Mint。Token Mint 是存储特定代币数据的账户。
 
-例如，让我们看一下Solana Explorer上的[USD Coin (USDC) on the Solana Explorer](https://explorer.solana.com/address/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)。USDC的Token Mint 地址是`EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`。通过浏览器，我们可以查看USDC的Token Mint的特定详细信息，如代币的当前供应量、铸造和冻结权限的地址，以及代币的小数精度：
+例如，让我们看一下 Solana Explorer 上的[USD Coin (USDC) on the Solana Explorer](https://explorer.solana.com/address/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)。USDC 的 Token Mint 地址是`EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`。通过浏览器，我们可以查看 USDC 的Token Mint 的特定详细信息，如代币的当前供应量、铸造和冻结权限的地址，以及代币的小数精度：
 ![Screenshot of USDC Token Mint](../assets/token-program-usdc-mint.png)
 
-要创建新的Token Mint，您需要向Token Program发送正确的交易指令。为此，我们将使用`@solana/spl-token`的`createMint`函数。
+要创建新的 Token Mint，您需要向 Token Program 发送正确的交易指令。为此，我们将使用`@solana/spl-token`的`createMint`函数。
 
 ```tsx
 const tokenMint = await createMint(
@@ -44,11 +44,11 @@ const tokenMint = await createMint(
   decimal
 );
 ```
-`createMint`函数返回新token mint的`publicKey`。此函数需要以下参数：
-- `connection` - 连接到集群的JSON-RPC连接
+`createMint`函数返回新 token mint 的`publicKey`。此函数需要以下参数：
+- `connection` - 连接到集群的 JSON-RPC 连接
 - `payer` - 支付交易费的账户
-- `mintAuthority` - 有权限执行从Token Mint铸造代币的账户
-- `freezeAuthority` - 有权限冻结token account中的代币的账户。如果不需要冻结属性，则可以将参数设置为null。
+- `mintAuthority` - 有权限执行从 Token Mint 铸造代币的账户
+- `freezeAuthority` - 有权限冻结 token account 中的代币的账户。如果不需要冻结属性，则可以将参数设置为null。
 - `decimals` - 指定代币的所需小数精度
 
 当从具有您的私钥访问权限的脚本创建新的铸造厂时，您可以简单地使用`createMint`函数。但是，如果您要构建一个网站允许用户创建新的代币铸造厂，您需要使用用户的私钥构建和提交具有正确指令的交易，而不让用户将其暴露给浏览器。在这种情况下，您需要构建并提交具有正确指令的交易。
@@ -98,20 +98,20 @@ async function buildCreateMintTransaction(
 ### 租金和租金豁免（Rent and Rent Exemption）
 请注意，前一个代码片段的函数主体中的第一行调用了`getMinimumBalanceForRentExemptMint`，其结果传递到`createAccount`函数中。这是称为租金豁免的账户初始化的一部分。
 
-直到最近，Solana上的所有账户都需要执行以下操作之一以避免被释放：
+Solana 上的所有账户都需要执行以下操作之一以避免被释放：
 1. 在特定时间间隔支付租金
 2. 在初始化时存入足够的SOL以被视为租金豁免
 
-最近，第一个选项被取消，现在在初始化新账户时需要存入足够的SOL以豁免租金。
+最近，第一个选项被取消，现在在初始化新账户时需要存入足够的 SOL 以豁免租金。
 
-通过这种方式，我们使用`@solana/spl-token`库中的`getMinimumBalanceForRentExemptMint`来创建一个token mint账户。然而，这个概念适用于所有账户，您可以使用`Connection`上的更通用的`getMinimumBalanceForRentExemption`方法来创建其他可能需要创建的账户。
+通过这种方式，我们使用`@solana/spl-token`库中的`getMinimumBalanceForRentExemptMint`来创建一个token mint 账户。然而，这个概念适用于所有账户，您可以使用`Connection`上的更通用的`getMinimumBalanceForRentExemption`方法来创建其他可能需要创建的账户。
 
 ## Token 账户（Token Account）
-在您可以铸造代币（发行新供应）之前，您需要一个Token账户来持有新发行的代币。
+在您可以铸造代币（发行新供应）之前，您需要一个 Token 账户来持有新发行的代币。
 
-Token账户持有特定“铸造厂”的代币，并具有指定的账户“所有者”。只有所有者被授权减少Token账户余额（转账、销毁等），而任何人都可以向Token账户发送代币以增加其余额。
+Token 账户持有特定“铸造厂”的代币，并具有指定的账户“所有者”。只有所有者被授权减少 Token 账户余额（转账、销毁等），而任何人都可以向 Token 账户发送代币以增加其余额。
 
-可以使用`spl-token`库的`createAccount`函数来创建新的Token账户：
+可以使用`spl-token`库的`createAccount`函数来创建新的 Token 账户：
 ```tsx
 const tokenAccount = await createAccount(
   connection,
@@ -122,18 +122,18 @@ const tokenAccount = await createAccount(
 );
 ```
 
-该`createAccount`函数返回新Token账户的`publicKey`。此函数需要以下参数：
+该`createAccount`函数返回新 Token 账户的`publicKey`。此函数需要以下参数：
 - `connection` - 连接到集群的JSON-RPC连接
 - `payer` - 支付交易费的账户
-- `mint` - 新Token账户与之关联的Token铸造厂
-- `owner` - 新Token账户的所有者账户
-- `keypair` - 这是一个可选参数，用于指定新Token账户地址。如果未提供密钥对，则`createAccount`函数将默认为从关联的`mint`和`owner`账户派生。
+- `mint` - 新 Token 账户与之关联的 Token 铸造厂
+- `owner` - 新 Token 账户的所有者账户
+- `keypair` - 这是一个可选参数，用于指定新 Token 账户地址。如果未提供密钥对，则`createAccount`函数将默认为从关联的`mint`和`owner`账户派生。
 
-请注意，此`createAccount`函数与之前在我们深入了解`createMint`函数时所展示的`createAccount`函数不同。之前，我们使用`SystemProgram`上的`createAccount`函数返回创建所有账户的指令。这里的`createAccount`函数是`spl-token`库中的一个辅助函数，它提交一个具有两个指令的交易。第一个创建账户，第二个将账户初始化为Token账户。
+请注意，此`createAccount`函数与之前在我们深入了解`createMint`函数时所展示的`createAccount`函数不同。之前，我们使用`SystemProgram`上的`createAccount`函数返回创建所有账户的指令。这里的`createAccount`函数是`spl-token`库中的一个辅助函数，它提交一个具有两个指令的交易。第一个创建账户，第二个将账户初始化为 Token 账户。
 
-与创建Token铸造厂类似，如果我们需要手动构建`createAccount`的交易，我们可以复制函数在底层所做的操作：
+与创建 Token 铸造厂类似，如果我们需要手动构建`createAccount`的交易，我们可以复制函数在底层所做的操作：
 1. 使用`getMint`检索与`mint`关联的数据
-2. 使用`getAccountLenForMint`计算所需的Token账户空间
+2. 使用`getAccountLenForMint`计算所需的 Token 账户空间
 3. 使用`getMinimumBalanceForRentExemption`计算租金豁免所需的lamports
 4. 使用`SystemProgram.createAccount`和`createInitializeAccountInstruction`创建新的交易。请注意，此`createAccount`来自`@solana/web3.js`，并用于创建一个通用的新账户。`createInitializeAccountInstruction`使用此新账户初始化新Token账户。
 
@@ -173,16 +173,16 @@ async function buildCreateTokenAccountTransaction(
 ```
 
 ### 关联的Token账户（Associated Token Account）
-关联Token账户是使用所有者的公钥和Token铸造厂派生出的Token账户。关联Token账户提供了一种确定性的方法，用于找到特定所有者在特定代币铸造厂中所拥有的Token账户。
+关联 Token 账户是使用所有者的公钥和 Token 铸造厂派生出的 Token 账户。关联 Token 账户提供了一种确定性的方法，用于找到特定所有者在特定代币铸造厂中所拥有的 Token 账户。
 
-大多数情况下，您创建Token账户时，您希望它是关联Token账户。
+大多数情况下，您创建 Token 账户时，您希望它是关联 Token 账户。
 
-- 如果没有关联Token账户，用户可能拥有属于同一铸造厂的许多Token账户，导致不知道将代币发送到哪里。
+- 如果没有关联 Token 账户，用户可能拥有属于同一铸造厂的许多 Token 账户，导致不知道将代币发送到哪里。
 - 关联Token账户允许用户向另一个用户发送代币，即使接收者尚未拥有该代币铸造厂的Token账户。
 
 ![ATAs are PDAs](../assets/atas-are-pdas.svg)
 
-与上述类似，您可以使用`spl-token`库的`createAssociatedTokenAccount`函数创建关联Token账户。
+与上述类似，您可以使用`spl-token`库的`createAssociatedTokenAccount`函数创建关联 Token 账户。
 
 ```tsx
 const associatedTokenAccount = await createAssociatedTokenAccount(
@@ -193,15 +193,15 @@ const associatedTokenAccount = await createAssociatedTokenAccount(
 );
 ```
 
-此函数返回新关联Token账户的公钥，并需要以下参数：
-- connection - 连接到集群的JSON-RPC连接
+此函数返回新关联 Token 账户的公钥，并需要以下参数：
+- connection - 连接到集群的 JSON-RPC 连接
 - payer - 支付交易费的账户
-- mint - 与Token账户关联的Token铸造厂
-- owner - Token账户的所有者账户
+- mint - 与 Token 账户关联的 Token 铸造厂
+- owner - Token 账户的所有者账户
 
-您还可以使用`getOrCreateAssociatedTokenAccount`来获取与给定地址关联的Token账户，如果不存在则创建它。例如，如果您要编写代码向给定用户空投代币，您可能会使用此函数来确保给定用户关联的Token账户不存在时创建它，并且交易付款人将扣除所需的账户创建的lamports。
+您还可以使用`getOrCreateAssociatedTokenAccount`来获取与给定地址关联的 Token 账户，如果不存在则创建它。例如，如果您要编写代码向给定用户空投代币，您可能会使用此函数来确保给定用户关联的 Token 账户不存在时创建它，并且交易付款人将扣除所需的账户创建的 lamports。
 在底层，`createAssociatedTokenAccount`做了以下两件事：
-1. 使用`getAssociatedTokenAddress`从`mint`和`owner`派生关联Token账户地址
+1. 使用`getAssociatedTokenAddress`从`mint`和`owner`派生关联 Token 账户地址
 2. 使用`createAssociatedTokenAccountInstruction`的指令构建交易
 
 ```tsx
@@ -229,7 +229,7 @@ async function buildCreateAssociatedTokenAccountTransaction(
 
 ## 铸造代币
 
-铸造代币是将新代币发行到流通环节的过程。当您铸造代币时，您增加了Token铸造厂的供应，并将新铸造的代币存入Token账户。只有Token铸造厂的铸造者被允许铸造新代币。
+铸造代币是将新代币发行到流通环节的过程。当您铸造代币时，您增加了 Token 铸造厂的供应，并将新铸造的代币存入Token 账户。只有 Token 铸造厂的铸造者被允许铸造新代币。
 
 要使用`spl-token`库铸造代币，您可以使用`mintTo`函数。
 
@@ -244,10 +244,10 @@ const transactionSignature = await mintTo(
 );
 ```
 
-`mintTo`函数返回一个可以在Solana Explorer上查看的`TransactionSignature`。`mintTo`函数需要以下参数：
-- `connection` - 连接到集群的JSON-RPC连接
+`mintTo`函数返回一个可以在 Solana Explorer 上查看的`TransactionSignature`。`mintTo`函数需要以下参数：
+- `connection` - 连接到集群的 JSON-RPC 连接
 - `payer` - 支付交易费的账户
-- `mint` - 与Token账户关联的Token铸造厂
+- `mint` - 与 Token 账户关联的 Token 铸造厂
 - `destination` - 将代币铸造到的目标Token账户
 - `authority` - 有铸造代币权限的账户
 - `amount` - 铸造的代币精确到小数的数量，例如 如果 Scrooge Coin 铸币厂的小数属性设置为 2，那么要获得 1 个完整的 Scrooge Coin，您需要将此属性设置为 100
