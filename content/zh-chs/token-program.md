@@ -100,7 +100,7 @@ async function buildCreateMintTransaction(
 
 Solana 上的所有账户都需要执行以下操作之一以避免被释放：
 1. 在特定时间间隔支付租金
-2. 在初始化时存入足够的SOL以被视为租金豁免
+2. 在初始化时存入足够的 SOL 以被视为租金豁免
 
 最近，第一个选项被取消，现在在初始化新账户时需要存入足够的 SOL 以豁免租金。
 
@@ -135,7 +135,7 @@ const tokenAccount = await createAccount(
 1. 使用`getMint`检索与`mint`关联的数据
 2. 使用`getAccountLenForMint`计算所需的 Token 账户空间
 3. 使用`getMinimumBalanceForRentExemption`计算租金豁免所需的lamports
-4. 使用`SystemProgram.createAccount`和`createInitializeAccountInstruction`创建新的交易。请注意，此`createAccount`来自`@solana/web3.js`，并用于创建一个通用的新账户。`createInitializeAccountInstruction`使用此新账户初始化新Token账户。
+4. 使用`SystemProgram.createAccount`和`createInitializeAccountInstruction`创建新的交易。请注意，此`createAccount`来自`@solana/web3.js`，并用于创建一个通用的新账户。`createInitializeAccountInstruction`使用此新账户初始化新 Token 账户。
 
 ```tsx
 import * as web3 from '@solana/web3'
@@ -172,13 +172,13 @@ async function buildCreateTokenAccountTransaction(
 }
 ```
 
-### 关联的Token账户（Associated Token Account）
+### 关联的 Token 账户（Associated Token Account）
 关联 Token 账户是使用所有者的公钥和 Token 铸造厂派生出的 Token 账户。关联 Token 账户提供了一种确定性的方法，用于找到特定所有者在特定代币铸造厂中所拥有的 Token 账户。
 
 大多数情况下，您创建 Token 账户时，您希望它是关联 Token 账户。
 
 - 如果没有关联 Token 账户，用户可能拥有属于同一铸造厂的许多 Token 账户，导致不知道将代币发送到哪里。
-- 关联Token账户允许用户向另一个用户发送代币，即使接收者尚未拥有该代币铸造厂的Token账户。
+- 关联 Token 账户允许用户向另一个用户发送代币，即使接收者尚未拥有该代币铸造厂的 Token 账户。
 
 ![ATAs are PDAs](../assets/atas-are-pdas.svg)
 
@@ -248,11 +248,11 @@ const transactionSignature = await mintTo(
 - `connection` - 连接到集群的 JSON-RPC 连接
 - `payer` - 支付交易费的账户
 - `mint` - 与 Token 账户关联的 Token 铸造厂
-- `destination` - 将代币铸造到的目标Token账户
+- `destination` - 将代币铸造到的目标 Token 账户
 - `authority` - 有铸造代币权限的账户
 - `amount` - 铸造的代币精确到小数的数量，例如 如果 Scrooge Coin 铸币厂的小数属性设置为 2，那么要获得 1 个完整的 Scrooge Coin，您需要将此属性设置为 100
 
-token铸造后更新Token铸造厂的铸造者为null是很常见的，这样一来设置了最大供应量，并确保将来无法铸造任何代币。相反，铸造权限可以授予给程序，因此代币可以定期或根据可编程条件自动铸造。
+token铸造后更新 Token 铸造厂的铸造者为 null 是很常见的，这样一来设置了最大供应量，并确保将来无法铸造任何代币。相反，铸造权限可以授予给程序，因此代币可以定期或根据可编程条件自动铸造。
 
 在底层，`mintTo`函数只是创建了一个从`createMintToInstruction`函数获取的指令的交易。
 
@@ -280,11 +280,11 @@ async function buildMintToTransaction(
 ```
 
 ## 转移代币
-SPL-Token转移需要发送方和接收方都拥有要转移的代币铸造厂的Token账户。代币从发送方的Token账户转移到接收方的Token账户。
+SPL-Token转移需要发送方和接收方都拥有要转移的代币铸造厂的 Token 账户。代币从发送方的 Token 账户转移到接收方的 Token 账户。
 
-当获取接收方的关联Token账户以确保其在转移前存在时，您可以使用`getOrCreateAssociatedTokenAccount`。只需记住，如果账户尚不存在，则此函数将创建它，交易付款人将扣除所需的账户创建的lamports。
+当获取接收方的关联 Token 账户以确保其在转移前存在时，您可以使用`getOrCreateAssociatedTokenAccount`。只需记住，如果账户尚不存在，则此函数将创建它，交易付款人将扣除所需的账户创建的lamports。
 
-一旦您知道接收方的Token账户地址，您就可以使用`spl-token`库的`transfer`函数转移代币。
+一旦您知道接收方的 Token 账户地址，您就可以使用`spl-token`库的`transfer`函数转移代币。
 
 ```tsx
 const transactionSignature = await transfer(
@@ -300,8 +300,8 @@ const transactionSignature = await transfer(
 `transfer`函数返回一个可以在Solana Explorer上查看的`TransactionSignature`。`transfer`函数需要以下参数：
 + `connection` - 连接到集群的JSON-RPC连接
 + `payer` - 支付交易费的账户
-+ `source` - 发送代币的Token账户
-+ `destination` - 接收代币的Token账户
++ `source` - 发送代币的 Token 账户
++ `destination` - 接收代币的 Token 账户
 + `owner` - `source`Token账户的所有者
 + `amount` - 要转移的代币数量
 
@@ -331,7 +331,7 @@ async function buildTransferTransaction(
 ```
 
 ## 销毁代币
-销毁代币是减少给定代币铸造厂的代币供应的过程。销毁代币会将其从给定Token账户和更广泛的流通中移除。
+销毁代币是减少给定代币铸造厂的代币供应的过程。销毁代币会将其从给定 Token 账户和更广泛的流通中移除。
 要使用`spl-token`库销毁代币，您使用`burn`函数。
 
 ```tsx
@@ -348,8 +348,8 @@ const transactionSignature = await burn(
 `burn`函数返回一个可以在Solana Explorer上查看的`TransactionSignature`。`burn`函数需要以下参数：
 + `connection` - 连接到集群的JSON-RPC连接
 + `payer` - 支付交易费的账户
-+ `account` - 要从中销毁代币的Token账户
-+ `mint` - 与Token账户关联的Token铸造厂
++ `account` - 要从中销毁代币的 Token 账户
++ `mint` - 与 Token 账户关联的 Token 铸造厂
 
 在底层，`burn`函数创建了一个包含从`createBurnInstruction`函数中获取的指令的交易。
 
